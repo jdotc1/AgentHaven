@@ -85,6 +85,32 @@ test('guard: redacts values after quoted JSON and YAML secret keys', () => {
   }
 });
 
+test('guard: quoted passphrases are fully redacted without changing unquoted assignments', () => {
+  for (const [input, expected] of [
+    ['DB_PASSWORD="correct horse battery staple"', 'DB_PASSWORD="[secret removed]"'],
+    ["password: 'hunter2 hunter2'", "password: '[secret removed]'"],
+    ['api_key=`synthetic value with spaces`', 'api_key=`[secret removed]`'],
+    ['{"password": "correct horse battery staple"}', '{"password": "[secret removed]"}'],
+    ['password="hunter2\\" horse"', 'password="[secret removed]"'],
+    ["password='hunter2\\' horse'", "password='[secret removed]'"],
+    ['password=`hunter2\\` horse`', 'password=`[secret removed]`'],
+    ['password=hunter2 horse', 'password=[secret removed] horse'],
+  ]) {
+    const result = inspect(input);
+    assert.equal(result.text, expected, input);
+    assert.deepEqual(result.secrets, ['password']);
+    assert.deepEqual(inspect(result.text).secrets, [], 'redaction must be idempotent');
+  }
+  for (const harmless of ['password=""', "password=''", 'password=``', 'password="short"']) {
+    assert.equal(inspect(harmless).text, harmless);
+  }
+  const longInput = 'password="' + '\\\\"'.repeat(20000); // >100 KB of quotes and backslashes, no closing quote.
+  const started = process.hrtime.bigint();
+  inspect(longInput);
+  const elapsedMs = Number(process.hrtime.bigint() - started) / 1e6;
+  assert.ok(elapsedMs < 500, `quoted-secret scan took ${elapsedMs.toFixed(1)} ms`);
+});
+
 test('guard: Shopify tokens are removed without catching lookalikes', () => {
   for (const prefix of ['shpat', 'shpca', 'shppa', 'shpss']) {
     const token = `${prefix}_` + 'a1B2c3D4'.repeat(4);
