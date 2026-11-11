@@ -51,6 +51,54 @@ test('guard: finds secrets of the common kinds and keeps the rest of the text', 
   ]) assert.deepEqual(inspect(ordinary).secrets, [], ordinary);
 });
 
+test('guard: redacts credentials in Authorization headers without masking the header', () => {
+  for (const [input, expected] of [
+    [
+      'curl -H "Authorization: Bearer abcdefghijklmnopqrstuvwxyz0123456789" https://api.example.com',
+      'curl -H "Authorization: Bearer [secret removed]" https://api.example.com',
+    ],
+    [
+      "curl -H 'authorization: token abcdefghijklmnopqrstuvwxyz0123456789'",
+      "curl -H 'authorization: token [secret removed]'",
+    ],
+    [
+      'Authorization: Basic YWJjZGVmZ2hpamtsbW5vcA==',
+      'Authorization: Basic [secret removed]',
+    ],
+    [
+      'AUTHORIZATION : bEaReR AbCdEf0123456789+/==',
+      'AUTHORIZATION : bEaReR [secret removed]',
+    ],
+  ]) {
+    const scanned = inspect(input);
+    assert.equal(scanned.text, expected);
+    assert.deepEqual(scanned.secrets, ['Authorization headers']);
+    assert.deepEqual(inspect(scanned.text).secrets, [], 'redaction is idempotent');
+  }
+
+  const existing = inspect('Authorization: Bearer ghp_abcdefghijklmnopqrstuvwxyz0123456789');
+  assert.equal(existing.text, 'Authorization: Bearer [GitHub token removed]');
+  assert.deepEqual(existing.secrets, ['GitHub token'], 'do not double-report provider credentials');
+
+  for (const ordinary of [
+    'Use a Bearer token in the Authorization header',
+    'Authorization: Bearer short-value',
+    'Authorization: Bearer [secret removed]',
+    'Authorization: Bearer [GitHub token removed]',
+    'X-Authorization: Bearer abcdefghijklmnopqrstuvwxyz0123456789',
+    'proxy-Authorization: Basic YWJjZGVmZ2hpamtsbW5vcA==',
+  ]) {
+    assert.equal(inspect(ordinary).text, ordinary, ordinary);
+    assert.deepEqual(inspect(ordinary).secrets, [], ordinary);
+  }
+});
+
+test('guard: repeated Authorization header prefixes scan in linear time', () => {
+  // Roughly 100 KB with no token-like value; avoids quadratic backtracking.
+  const input = 'Authorization: Bearer '.repeat(5000);
+  assert.deepEqual(inspect(input).secrets, []);
+});
+
 test('guard: DigitalOcean tokens are removed without catching lookalikes', () => {
   for (const prefix of ['dop', 'doo', 'dor']) {
     const token = `${prefix}_v1_` + 'a1b2c3d4'.repeat(8);

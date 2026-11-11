@@ -45,6 +45,9 @@ const SECRET_RULES = [
   ['PyPI token', /(?<![A-Za-z0-9_-])pypi-[A-Za-z0-9_-]{85,}(?![A-Za-z0-9_-])/g],
   ['JWT', /\beyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/g],
   ['connection string password', /\b([a-z][a-z0-9+.-]*:\/\/[^\s:/@]+:)([^\s@/]{3,})(@)/gi],
+  // Keep the header and scheme readable while protecting provider-independent tokens.
+  // Run after provider formats so an already-redacted token is not reported twice.
+  ['Authorization headers', /(?<![-\w])(Authorization\s*:\s*(?:Bearer|Token|Basic)\s+)(?!\[)[A-Za-z0-9._~+/=-]{16,}(?![A-Za-z0-9._~+/=-])/gi],
   // Also inside names like DB_PASSWORD or OPENAI_API_KEY (an underscore is no word boundary).
   ['password', /(?<![A-Za-z0-9])((?:password|passwd|pwd|secret|api[_-]?key|access[_-]?token|auth[_-]?token|client[_-]?secret)\s*[:=]\s*["']?)((?!\[)[^\s"'`,;]{6,})/gi],
 ];
@@ -97,7 +100,7 @@ function inspect(input) {
       if (valid && !valid(m[0])) return m[0];
       secrets.push(kind);
       // Keep the key name or URL around a password, replace only the secret itself.
-      if (kind === 'password') return `${m[1]}[secret removed]`;
+      if (kind === 'password' || kind === 'Authorization headers') return `${m[1]}[secret removed]`;
       if (kind === 'connection string password') return `${m[1]}[secret removed]${m[3]}`;
       return `[${kind} removed]`;
     });
