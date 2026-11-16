@@ -99,6 +99,25 @@ test('guard: redacts 1Password service account tokens without matching lookalike
   assert.ok(Number(process.hrtime.bigint() - started) / 1e6 < 500);
 });
 
+test('guard: redacts Slack app-level credentials without masking lookalikes', () => {
+  const token = `xapp-1-${'Ab12'.repeat(3)}-${'Cd34'.repeat(3)}-${'Ef56'.repeat(10)}`;
+  for (const input of [token, `Connect using ${token}`, `Authorization: Bearer ${token}`]) {
+    const scanned = inspect(input);
+    assert.deepEqual(scanned.secrets, ['Slack app-level token']);
+    assert.equal(scanned.text, input.replace(token, '[Slack app-level token removed]'));
+    assert.deepEqual(inspect(scanned.text).secrets, []);
+  }
+
+  for (const ordinary of [
+    'xapp-1-short',
+    `xapp-1-${'Ab12'.repeat(2)}-${'Cd34'.repeat(3)}-${'Ef56'.repeat(10)}`,
+    `not${token}`,
+    `prefix_${token}`,
+    `${token}_suffix`,
+    `xapp-1-${'A'.repeat(150_000)}`,
+  ]) assert.deepEqual(inspect(ordinary).secrets, [], ordinary.slice(0, 70));
+});
+
 test('guard: redacts values after quoted JSON and YAML secret keys', () => {
   for (const [input, expected] of [
     ['password: hunter2hunter2', 'password: [secret removed]'],
