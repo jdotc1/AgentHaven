@@ -55,6 +55,9 @@ const SECRET_RULES = [
   // Cloudflare uses 40 alphanumeric characters and an eight-digit hex checksum.
   ['Cloudflare API credential', /(?<![A-Za-z0-9_-])(?:cfk|cfut|cfat)_[A-Za-z0-9]{40}[0-9a-fA-F]{8}(?![A-Za-z0-9_-])/g],
   ['Linear API key', /(?<![A-Za-z0-9_])lin_api_[A-Za-z0-9]{40}(?![A-Za-z0-9_])/g],
+  // Pinecone documents pcsk_ as its API key prefix. The payload range is a
+  // conservative detector heuristic, not a claim of a fixed issued length.
+  ['Pinecone API key', /(?<![A-Za-z0-9_-])pcsk_[A-Za-z0-9_-]{24,256}(?![A-Za-z0-9_-])/g],
   ['DigitalOcean token', /(?<![A-Za-z0-9_])(?:dop|doo|dor)_v1_[0-9a-f]{64}(?![A-Za-z0-9_])/g],
   ['Shopify token', /(?<![A-Za-z0-9_])(?:shpat|shpca|shppa|shpss)_[0-9a-fA-F]{32}(?![A-Za-z0-9_])/g],
   // Telegram bot tokens are 8-10 digits, a colon and 35 characters. No word
