@@ -177,6 +177,26 @@ test('guard: NVIDIA NGC API keys are redacted before reaching shared memory', ()
   assert.equal(inspect(oversized).text, '[NVIDIA NGC API key removed]', 'redact complete oversized key');
 });
 
+test('guard: even short explicitly labelled credentials are fully removed', () => {
+  const cases = [
+    ['password="x"', 'password="[secret removed]"'],
+    ["api_key='ab'", "api_key='[secret removed]'"],
+    ['DB_PASSWORD=123', 'DB_PASSWORD=[secret removed]'],
+    ['client_secret=Z', 'client_secret=[secret removed]'],
+    ['token=xy', 'token=[secret removed]'],
+    ['auth_token="a b"', 'auth_token="[secret removed]"'],
+  ];
+  for (const [input, expected] of cases) {
+    const result = inspect(input);
+    assert.equal(result.text, expected, input);
+    assert.deepEqual(result.secrets, ['password'], input);
+    assert.equal(inspect(result.text).text, result.text, 'redaction should be idempotent');
+  }
+  for (const ordinary of ['passwordless=ok', 'tokenizer=words', 'secretary=assistant', 'token=', 'password=""']) {
+    assert.equal(inspect(ordinary).text, ordinary);
+  }
+});
+
 test('guard: finds secrets of the common kinds and keeps the rest of the text', () => {
   const cases = {
     'Anthropic key': 'key sk-' + 'ant-api03-abcdefghijklmnopqrstuvwxyz0123',
