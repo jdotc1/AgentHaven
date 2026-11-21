@@ -20,11 +20,18 @@ test('guard: Figma PAT rule does not consume adjacent identifiers or partial key
   for (const text of [
     'figd_', 'figd_' + 'A'.repeat(31), 'figd_' + 'A'.repeat(201),
     'figx_' + 'A'.repeat(40), 'prefix_' + token,
-    'not' + token, token + '_suffix', 'figd_' + 'A'.repeat(100_000),
+    'not' + token, 'figd_' + 'A'.repeat(100_000),
     'A Figma token is generated under Settings > Security',
   ]) {
     const result = inspect(text);
     assert.deepEqual(result.secrets, [], text.slice(0, 80));
     assert.equal(result.text, text);
   }
+});
+
+test('guard: redact an opaque Figma token including underscore suffix', () => {
+  const token = 'figd_' + 'Ab3x'.repeat(10) + '_suffix';
+  const result = inspect(token);
+  assert.deepEqual(result.secrets, ['Figma personal access token']);
+  assert.equal(result.text, '[Figma personal access token removed]');
 });
