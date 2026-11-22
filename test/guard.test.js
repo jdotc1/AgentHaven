@@ -13,6 +13,28 @@ const tmpStore = () => new Store({ dataDir: fs.mkdtempSync(path.join(os.tmpdir()
 const fakeDiscordToken = (signature = 'Z'.repeat(27), id = '123456789012345678') =>
   `${Buffer.from(id).toString('base64url')}.AbC_-7.${signature}`;
 
+test('guard: GitLab CI job and pipeline trigger tokens are redacted', () => {
+  for (const [prefix, kind] of [
+    ['glcbt-', 'GitLab CI job token'],
+    ['glptt-', 'GitLab pipeline trigger token'],
+  ]) {
+    const token = prefix + 'Ab3x'.repeat(8); // Synthetic credential-shaped string.
+    for (const raw of [token, `Credential: ${token} ready`]) {
+      const scanned = inspect(raw);
+      assert.deepEqual(scanned.secrets, [kind]);
+      assert.equal(scanned.text, raw.replace(token, `[${kind} removed]`));
+      assert.deepEqual(inspect(scanned.text).secrets, [], 'redaction must be idempotent');
+    }
+    for (const harmless of [
+      prefix + 'Ab3x'.repeat(4), // Too short to be a token.
+      'prefix_' + token,
+      'Use ' + prefix + ' in documentation',
+    ]) {
+      assert.deepEqual(inspect(harmless).secrets, [], harmless);
+    }
+  }
+});
+
 test('guard: Firecrawl API keys are fully removed without masking ordinary text', () => {
   for (const token of [
     'fc-' + 'Ab3x'.repeat(9),
