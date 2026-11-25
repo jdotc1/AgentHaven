@@ -97,6 +97,8 @@ const SECRET_RULES = [
   // Cloudflare uses 40 alphanumeric characters and an eight-digit hex checksum.
   ['Cloudflare API credential', /(?<![A-Za-z0-9_-])(?:cfk|cfut|cfat)_[A-Za-z0-9]{40}[0-9a-fA-F]{8}(?![A-Za-z0-9_-])/g],
   ['Linear API key', /(?<![A-Za-z0-9_])lin_api_[A-Za-z0-9]{40}(?![A-Za-z0-9_])/g],
+  // New Relic User API keys are NRAK-prefixed; the 27-character body is bounded.
+  ['New Relic user API key', /(?<![A-Za-z0-9_-])NRAK-[A-Za-z0-9]{27}(?![A-Za-z0-9_-])/g],
   ['DigitalOcean token', /(?<![A-Za-z0-9_])(?:dop|doo|dor)_v1_[0-9a-f]{64}(?![A-Za-z0-9_])/g],
   // Doppler publishes strict formats for its CLI, personal, service, service
   // account, identity, SCIM and audit tokens; service tokens may include an
