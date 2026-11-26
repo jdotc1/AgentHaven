@@ -16,7 +16,7 @@ test('guard: redact complete WakaTime API key values', () => {
 
 test('guard: reject partial WakaTime API key values and false prefixes', () => {
   for (const token of tokens) {
-    const nearMisses = [token.slice(0, -1), 'prefix_' + token, token + '_suffix];
+    const nearMisses = [token.slice(0, -1), 'prefix_' + token, token + '_suffix'];
     for (const value of nearMisses) assert.deepEqual(inspect(value).secrets, [], value.slice(0, 32));
   }
 });
