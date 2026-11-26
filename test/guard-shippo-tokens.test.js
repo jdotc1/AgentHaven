@@ -16,7 +16,7 @@ test('guard: redact complete Shippo API token values', () => {
 
 test('guard: reject partial Shippo API token values and false prefixes', () => {
   for (const token of tokens) {
-    const nearMisses = [token.slice(0, -1), 'prefix_' + token, token + '_suffix];
+    const nearMisses = [token.slice(0, -1), 'prefix_' + token, token + '_suffix'];
     for (const value of nearMisses) assert.deepEqual(inspect(value).secrets, [], value.slice(0, 32));
   }
 });
