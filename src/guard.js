@@ -139,11 +139,11 @@ const SECRET_RULES = [
   ['Stripe key', /\b(?:sk|rk)_(?:live|test)_[A-Za-z0-9]{20,}/g],
   // Webhook endpoint signing secrets are separate from Stripe API keys.
   ['Stripe webhook secret', /(?<![A-Za-z0-9_])whsec_[A-Za-z0-9]{20,128}(?![A-Za-z0-9_])/g],
+  // WakaTime API keys include a waka_-prefixed UUID; require all five groups.
+  ['WakaTime API key', /(?<![A-Za-z0-9_])waka_[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}(?![A-Za-z0-9_-])/g],
   // PostHog generates base57 bodies: 48 chars for phx_/phs_, 44 for pha_/phr_.
   // No upper bound: an oversized credential-like string must not be left exposed.
   // phc_ project keys are public and deliberately excluded.
-  // WakaTime API keys include a waka_-prefixed UUID; require all five groups.
-  ['WakaTime API key', /(?<![A-Za-z0-9_])waka_[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}(?![A-Za-z0-9_-])/g],
   ['PostHog private token', /(?<![A-Za-z0-9_-])(?:(?:phx|phs)_[2-9A-HJ-NP-Za-km-z]{48,}|(?:pha|phr)_[2-9A-HJ-NP-Za-km-z]{44,})(?![A-Za-z0-9_-])/g, isPostHogPrivateToken],
   ['Hugging Face token', /\bhf_[A-Za-z0-9]{30,}/g],
   ['npm token', /\bnpm_[A-Za-z0-9]{36}\b/g],
