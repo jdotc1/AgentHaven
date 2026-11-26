@@ -69,6 +69,8 @@ const SECRET_RULES = [
   ['Supabase secret key', /(?<![A-Za-z0-9_])sb_secret_(?=[A-Za-z0-9_-]{0,30}[A-Z])[A-Za-z0-9_-]{22}_[A-Za-z0-9_-]{8}(?![A-Za-z0-9_-])/g],
   // Vercel's five credential types have distinct prefixes; the opaque payload
   // bound is a detection heuristic, not a fixed-format token validator.
+  // Trigger.dev environment keys include tr_prod_/tr_stg_/tr_preview_ and newer _sk_ variants; distinguish secret keys from brief identifiers.
+  ['Trigger.dev secret key', /(?<![A-Za-z0-9_])tr_(?:prod|stg|preview)(?:_sk)?_[A-Za-z0-9_-]{24,128}(?![A-Za-z0-9_-])/g],
   ['Vercel API credential', /(?<![A-Za-z0-9_-])vc[piark]_[A-Za-z0-9]{40,80}(?![A-Za-z0-9_-])/g],
   ['Grafana service account token', /(?<![A-Za-z0-9_-])glsa_[A-Za-z0-9]{32}_[A-Fa-f0-9]{8}(?![A-Za-z0-9_-])/g],
   // Tailscale API, auth, OAuth client, SCIM and webhook keys use typed,
