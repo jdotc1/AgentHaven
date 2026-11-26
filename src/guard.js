@@ -146,6 +146,9 @@ const SECRET_RULES = [
   ['Hugging Face token', /\bhf_[A-Za-z0-9]{30,}/g],
   ['npm token', /\bnpm_[A-Za-z0-9]{36}\b/g],
   // Use the scanner-observed token shape, not a broad prefix that eats identifiers.
+  // Airtable personal access tokens contain a 17-character ID (pat + 14)
+  // and a separate 64-character secret; redact both components together.
+  ['Airtable personal access token', /(?<![A-Za-z0-9_-])pat[A-Za-z0-9]{14}\.[A-Za-z0-9_-]{64}(?![A-Za-z0-9_-])/g],
   ['Notion integration token', /(?<![A-Za-z0-9_-])ntn_[0-9]{11}[A-Za-z0-9]{35}(?![A-Za-z0-9_-])/g],
   // LangSmith personal access tokens and service keys have distinct prefixes.
   // Uppercase in the opaque body is a heuristic against lowercase identifiers,
