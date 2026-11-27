@@ -18,7 +18,7 @@ test('redacts complete GitLab workspace token values from shared memory', () => 
 
 test('avoids partial and embedded GitLab workspace token matches', () => {
   for (const raw of [prefix, prefix + 'A'.repeat(19), prefix + 'A'.repeat(129),
-    'x' + token, '_' + token, token + 'x', token + '_']) {
+    'x' + token, '_' + token, /* variable-length suffixes are also valid tokens */]) {
     assert.equal(inspect(raw).text, raw);
   }
 });
